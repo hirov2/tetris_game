@@ -1,0 +1,59 @@
+
+○ manual sample 自作の操作判定部分
+game_manager.py L.196-206あたり
+
+○ 回転種別
+GameStatus["block_info"]["currentShape"]["direction_range"]
+0, 1, 2, 3 が入っている
+バーと階段×2は0,1のみ
+□は0のみ
+ほかは0, 1, 2, 3
+→ 使わない
+
+○ Shape
+ブロックの事の模様。NEXTは次のブロック。
+direction_rangeは回転種別
+ほかは不明だが、ブロックの種類等入っているのか？
+→ ブロックの種別は必要 ★
+
+
+○ 画面の横マス数
+GameStatus["field_info"]["width"]
+10固定なので1回取れば良し、決め打ちでも問題なし
+→ 使うけど1回きり
+
+
+○ 画面の縦マス数
+GameStatus["field_info"]["height"]
+22固定なので1回取れば良し、決め打ちでも問題なし
+→使うけど1回きり
+
+
+○ ブロックが無いマスのインデックス？
+GameStatus["debug_info"]["shape_info"]["shapeNone"]["index"]
+0固定なので1回取れば良し、決め打ちでも問題なし
+→ 使うけど1回きり
+
+
+○ ブロックの種類
+GameStatus["block_info"]["currentShape"]["index"]
+1から7が入っている
+→  必ず使う、ただしサンプルでは使っていない
+
+
+○ 現在のフィールド
+GameStatus[field_info][backboard]
+1次元配列で入っている 多分10×22の220
+ブロックがあるところにはブロックのインデックス（１〜７）、
+ブロックがないところにはブロックなしのインデックス（0）
+→ 必ず使う
+  2次元配列で0/1に変換したい
+  でもって、各列の一番上だけ見えるようにしたい
+
+
+
+
+
+
+
+
