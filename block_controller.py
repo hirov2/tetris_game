@@ -349,7 +349,7 @@ class Block_Controller(object):
                 print("ERR:GetSimulationOfBackboardStatusWithShapeJ", x)
                 x = 1
             elif x > 8:
-                print("ERR:GetSimulationOfBackboardStatusWithShapeL", x)
+                print("ERR:GetSimulationOfBackboardStatusWithShapeJ", x)
                 x = 8
             Candidate_y[0] = self.GetYOfTopBlock(BackboardStatus, x - 1)
             Candidate_y[1] = self.GetYOfTopBlock(BackboardStatus, x)
@@ -384,16 +384,89 @@ class Block_Controller(object):
         
         if 0 == Shape_pattern:
             print("Shape Pattern 0")
+            if x > 8:
+                print("ERR:GetSimulationOfBackboardStatusWithShapeT", x)
+                x = 8
+            Candidate_y[0] = self.GetYOfTopBlock(BackboardStatus, x)
+            Candidate_y[1] = self.GetYOfTopBlock(BackboardStatus, x + 1)
+            if Candidate_y[1] < Candidate_y[0] - 1:
+                y = Candidate_y[1]
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 2, 4)
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 1, 4)
+                BackboardStatus = self.AddBlock(BackboardStatus, x + 1, y - 1, 4)
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y   ,  4)
+            else:
+                y = Candidate_y[0]
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 3, 4)
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 2, 4)
+                BackboardStatus = self.AddBlock(BackboardStatus, x + 1, y - 2, 4)
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 1, 4)
 
         elif 1 == Shape_pattern:
             print("Shape Pattern 1")
+            if x < 1:
+                print("ERR:GetSimulationOfBackboardStatusWithShapeT", x)
+                x = 1
+            elif x > 8:
+                print("ERR:GetSimulationOfBackboardStatusWithShapeT", x)
+                x = 8
+            Candidate_y[0] = self.GetYOfTopBlock(BackboardStatus, x - 1)
+            Candidate_y[1] = self.GetYOfTopBlock(BackboardStatus, x)
+            Candidate_y[2] = self.GetYOfTopBlock(BackboardStatus, x + 1)
+
+            y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[2], 22, 22)
+            
+            if Candidate_y[1] < y + 1:
+                y = Candidate_y[1]
+                BackboardStatus = self.AddBlock(BackboardStatus, x - 1, y - 2, 4)
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 2, 4)
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 1, 4)
+                BackboardStatus = self.AddBlock(BackboardStatus, x + 1, y - 2, 4)
+            else:
+                BackboardStatus = self.AddBlock(BackboardStatus, x - 1, y - 1, 4)
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 1, 4)
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y,     4)
+                BackboardStatus = self.AddBlock(BackboardStatus, x + 1, y - 1, 4)
 
         elif 2 == Shape_pattern:
             print("Shape Pattern 2")
+            if x < 1:
+                print("ERR:GetSimulationOfBackboardStatusWithShapeT", x)
+                x = 1
+            Candidate_y[0] = self.GetYOfTopBlock(BackboardStatus, x - 1)
+            Candidate_y[1] = self.GetYOfTopBlock(BackboardStatus, x)
+            if Candidate_y[0] < Candidate_y[1] - 1:
+                y = Candidate_y[0]
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 2, 4)
+                BackboardStatus = self.AddBlock(BackboardStatus, x - 1, y - 1, 4)
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 1, 4)
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y,     4)
+            else:
+                y = Candidate_y[1]
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 3, 4)
+                BackboardStatus = self.AddBlock(BackboardStatus, x - 1, y - 2, 4)
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 2, 4)
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 1, 4)
             
         elif 3 == Shape_pattern:
             print("Shape Pattern 3")
-                        
+            if x < 1:
+                print("ERR:GetSimulationOfBackboardStatusWithShapeT", x)
+                x = 1
+            elif x > 8:
+                print("ERR:GetSimulationOfBackboardStatusWithShapeT", x)
+                x = 8
+            Candidate_y[0] = self.GetYOfTopBlock(BackboardStatus, x - 1)
+            Candidate_y[1] = self.GetYOfTopBlock(BackboardStatus, x)
+            Candidate_y[2] = self.GetYOfTopBlock(BackboardStatus, x + 1)
+
+            y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[1], Candidate_y[2], 22)
+
+            BackboardStatus = self.AddBlock(BackboardStatus, x - 1, y - 1, 4)
+            BackboardStatus = self.AddBlock(BackboardStatus, x    , y - 2, 4)
+            BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 1, 4)
+            BackboardStatus = self.AddBlock(BackboardStatus, x + 1, y - 1, 4)
+            
         return BackboardStatus
         
 
@@ -404,6 +477,8 @@ class Block_Controller(object):
         x = Shape_x
         y = 0
         Candidate_y = [0, 0]
+
+        Shape_pattern = (self.CurrentDirection + Shape_direction)%1
         
         print("Shape Pattern 0")
         if x > 8:
@@ -434,10 +509,50 @@ class Block_Controller(object):
         
         if 0 == Shape_pattern:
             print("Shape Pattern 0")
+            if x < 1:
+                print("ERR:GetSimulationOfBackboardStatusWithShapeS", x)
+                x = 1
+            elif x > 8:
+                print("ERR:GetSimulationOfBackboardStatusWithShapeS", x)
+                x = 8
+            Candidate_y[0] = self.GetYOfTopBlock(BackboardStatus, x - 1)
+            Candidate_y[1] = self.GetYOfTopBlock(BackboardStatus, x)
+            Candidate_y[2] = self.GetYOfTopBlock(BackboardStatus, x + 1)
 
+            y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[1], 22, 22)
+            if Candidate_y[2] < y - 1:
+                y = Candidate_y[2]
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 1, 6)
+                BackboardStatus = self.AddBlock(BackboardStatus, x + 1, y - 1, 6)
+                BackboardStatus = self.AddBlock(BackboardStatus, x - 1, y    , 6)
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y    , 6)
+            else:
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 2, 6)
+                BackboardStatus = self.AddBlock(BackboardStatus, x + 1, y - 2, 6)
+                BackboardStatus = self.AddBlock(BackboardStatus, x - 1, y - 1, 6)
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 1, 6)
+            
         elif 1 == Shape_pattern:
             print("Shape Pattern 1")
-                        
+            if x > 8:
+                print("ERR:GetSimulationOfBackboardStatusWithShapeS", x)
+                x = 8
+            Candidate_y[0] = self.GetYOfTopBlock(BackboardStatus, x)
+            Candidate_y[1] = self.GetYOfTopBlock(BackboardStatus, x + 1)
+            
+            if Candidate_y[0] < Candidate_y[1] - 1:
+                y = Candidate_y[0]
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 2, 6)
+                BackboardStatus = self.AddBlock(BackboardStatus, x    , y - 1, 6)
+                BackboardStatus = self.AddBlock(BackboardStatus, x + 1, y - 1, 6)
+                BackboardStatus = self.AddBlock(BackboardStatus, x + 1, y,     6)
+            else:
+                y = Candidate_y[1]
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 3, 6)
+                BackboardStatus = self.AddBlock(BackboardStatus, x    , y - 2, 6)
+                BackboardStatus = self.AddBlock(BackboardStatus, x + 1, y - 2, 6)
+                BackboardStatus = self.AddBlock(BackboardStatus, x + 1, y - 1, 6)
+                            
         return BackboardStatus
         
         
@@ -453,10 +568,50 @@ class Block_Controller(object):
         
         if 0 == Shape_pattern:
             print("Shape Pattern 0")
+            if x < 1:
+                print("ERR:GetSimulationOfBackboardStatusWithShapeZ", x)
+                x = 1
+            elif x > 8:
+                print("ERR:GetSimulationOfBackboardStatusWithShapeZ", x)
+                x = 8
+            Candidate_y[0] = self.GetYOfTopBlock(BackboardStatus, x - 1)
+            Candidate_y[1] = self.GetYOfTopBlock(BackboardStatus, x)
+            Candidate_y[2] = self.GetYOfTopBlock(BackboardStatus, x + 1)
 
+            y = self.GetMinYOfBlock(22, Candidate_y[1], Candidate_y[2], 22)
+            if Candidate_y[0] < y - 1:
+                y = Candidate_y[0]
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 1, 7)
+                BackboardStatus = self.AddBlock(BackboardStatus, x - 1, y - 1, 7)
+                BackboardStatus = self.AddBlock(BackboardStatus, x + 1, y    , 7)
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y    , 7)
+            else:
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 2, 7)
+                BackboardStatus = self.AddBlock(BackboardStatus, x - 1, y - 2, 7)
+                BackboardStatus = self.AddBlock(BackboardStatus, x + 1, y - 1, 7)
+                BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 1, 7)
+            
         elif 1 == Shape_pattern:
             print("Shape Pattern 1")
-                        
+            if x > 8:
+                print("ERR:GetSimulationOfBackboardStatusWithShapeZ", x)
+                x = 8
+            Candidate_y[0] = self.GetYOfTopBlock(BackboardStatus, x)
+            Candidate_y[1] = self.GetYOfTopBlock(BackboardStatus, x + 1)
+            
+            if Candidate_y[1] < Candidate_y[0] - 1:
+                y = Candidate_y[1]
+                BackboardStatus = self.AddBlock(BackboardStatus, x + 1, y - 2, 7)
+                BackboardStatus = self.AddBlock(BackboardStatus, x    , y - 1, 7)
+                BackboardStatus = self.AddBlock(BackboardStatus, x + 1, y - 1, 7)
+                BackboardStatus = self.AddBlock(BackboardStatus, x    , y,     7)
+            else:
+                y = Candidate_y[0]
+                BackboardStatus = self.AddBlock(BackboardStatus, x + 1, y - 3, 7)
+                BackboardStatus = self.AddBlock(BackboardStatus, x    , y - 2, 7)
+                BackboardStatus = self.AddBlock(BackboardStatus, x + 1, y - 2, 7)
+                BackboardStatus = self.AddBlock(BackboardStatus, x    , y - 1, 7)
+                
         return BackboardStatus
 
 
