@@ -58,13 +58,21 @@ class Block_Controller(object):
         # search with current block Shape
         LatestEvalSpace = 100000
         LatestEvalSpaceOfWidth = 10000
+        LatestEvalSpaceOfWidthUnderHalf = 10000
         LatestEvalAverageHeight = 0
         LatestEvalMaxHeight = 0
         LatestEvalMinHeight = 100000
         LatestEvalMaxMinHeight = 100000
         LatestEvalEraceCount = 0
         LatestBackboardStatus = copy.deepcopy(self.board_status)
+        
+        break_flag = 0
+        
         for direction0 in CurrentShapeDirectionRange:
+        
+            if( break_flag > 0):
+                break
+        
             # search with x
             for x0 in range(10):
                 BackboardStatus = self.GetSimulationOfBackboardStatus(self.board_status,
@@ -73,16 +81,18 @@ class Block_Controller(object):
                                                                       x0)
                 EvalSpace = self.GetNumOfSpace(BackboardStatus)
                 EvalSpaceOfWidth = self.GetNumOfSpaceWidth(BackboardStatus)
+                EvalSpaceOfWidthUnderHalf = self.GetNumOfSpaceWidthUnderHalf(BackboardStatus)
                 EvalEraceCount = self.GetEraceCountInBackboard(BackboardStatus)
                 EvalAverageHeight = self.GetYOfAverageBlock(BackboardStatus)
                 EvalMaxHeight = self.GetYOfMaxBlock(BackboardStatus)
                 EvalMinHeight = self.GetYOfMinBlock(BackboardStatus)
                 EvalMaxMinHeight = EvalMinHeight - EvalMaxHeight
-                print(EvalSpace, EvalSpaceOfWidth, EvalEraceCount, EvalAverageHeight, EvalMaxHeight, EvalMinHeight, EvalMaxMinHeight)
+                print(EvalSpace, EvalSpaceOfWidth, EvalSpaceOfWidthUnderHalf, EvalEraceCount, EvalAverageHeight, EvalMaxHeight, EvalMinHeight, EvalMaxMinHeight)
 
                 if( EvalEraceCount > 2 ):
                     LatestEvalSpace = EvalSpace
                     LatestEvalSpaceOfWidth = EvalSpaceOfWidth
+                    LatestEvalSpaceOfWidthUnderHalf = EvalSpaceOfWidthUnderHalf
                     LatestEvalEraceCount = EvalEraceCount
                     LatestEvalAverageHeight = EvalAverageHeight
                     LatestEvalMaxHeight = EvalMaxHeight
@@ -91,11 +101,14 @@ class Block_Controller(object):
                     LatestBackboardStatus = copy.deepcopy(BackboardStatus)
                     nextMove["strategy"]["direction"] = direction0
                     nextMove["strategy"]["x"] = x0
+                    
+                    break_flag = 1
                     break
 
                 if( EvalSpace < LatestEvalSpace ):
                     LatestEvalSpace = EvalSpace
                     LatestEvalSpaceOfWidth = EvalSpaceOfWidth
+                    LatestEvalSpaceOfWidthUnderHalf = EvalSpaceOfWidthUnderHalf
                     LatestEvalEraceCount = EvalEraceCount
                     LatestEvalAverageHeight = EvalAverageHeight
                     LatestEvalMaxHeight = EvalMaxHeight
@@ -108,6 +121,7 @@ class Block_Controller(object):
                     if( EvalMaxMinHeight < LatestEvalMaxMinHeight ):
                         LatestEvalSpace = EvalSpace
                         LatestEvalSpaceOfWidth = EvalSpaceOfWidth
+                        LatestEvalSpaceOfWidthUnderHalf = EvalSpaceOfWidthUnderHalf
                         LatestEvalEraceCount = EvalEraceCount
                         LatestEvalAverageHeight = EvalAverageHeight
                         LatestEvalMaxHeight = EvalMaxHeight
@@ -116,32 +130,22 @@ class Block_Controller(object):
                         LatestBackboardStatus = copy.deepcopy(BackboardStatus)
                         nextMove["strategy"]["direction"] = direction0
                         nextMove["strategy"]["x"] = x0
-
-#                    elif( EvalMaxHeight > LatestEvalMaxHeight ):
-#                        LatestEvalSpace = EvalSpace
-#                        LatestEvalSpaceOfWidth = EvalSpaceOfWidth
-#                        LatestEvalEraceCount = EvalEraceCount
-#                        LatestEvalAverageHeight = EvalAverageHeight
-#                        LatestEvalMaxHeight = EvalMaxHeight
-#                        LatestEvalMinHeight = EvalMinHeight
-#                        LatestEvalMaxMinHeight = EvalMaxMinHeight
-#                        LatestBackboardStatus = copy.deepcopy(BackboardStatus)
-#                        nextMove["strategy"]["direction"] = direction0
-#                        nextMove["strategy"]["x"] = x0#
-#                    elif( EvalAverageHeight > LatestEvalAverageHeight ):
-#                        LatestEvalSpace = EvalSpace
-#                        LatestEvalSpaceOfWidth = EvalSpaceOfWidth
-#                        LatestEvalEraceCount = EvalEraceCount
-#                        LatestEvalAverageHeight = EvalAverageHeight
-#                        LatestEvalMaxHeight = EvalMaxHeight
-#                        LatestEvalMinHeight = EvalMinHeight
-#                        LatestEvalMaxMinHeight = EvalMaxMinHeight
-#                        LatestBackboardStatus = copy.deepcopy(BackboardStatus)
-#                        nextMove["strategy"]["direction"] = direction0
-#                        nextMove["strategy"]["x"] = x0                    
+                    elif( EvalMaxMinHeight == LatestEvalMaxMinHeight and EvalSpaceOfWidthUnderHalf < LatestEvalSpaceOfWidthUnderHalf ):
+                         LatestEvalSpace = EvalSpace
+                         LatestEvalSpaceOfWidth = EvalSpaceOfWidth
+                         LatestEvalSpaceOfWidthUnderHalf = EvalSpaceOfWidthUnderHalf
+                         LatestEvalEraceCount = EvalEraceCount
+                         LatestEvalAverageHeight = EvalAverageHeight
+                         LatestEvalMaxHeight = EvalMaxHeight
+                         LatestEvalMinHeight = EvalMinHeight
+                         LatestEvalMaxMinHeight = EvalMaxMinHeight
+                         LatestBackboardStatus = copy.deepcopy(BackboardStatus)
+                         nextMove["strategy"]["direction"] = direction0
+                         nextMove["strategy"]["x"] = x0
+         
 
         print(self.CurrentShape_index)        
-        print(LatestEvalSpace, LatestEvalSpaceOfWidth, LatestEvalEraceCount, LatestEvalAverageHeight, LatestEvalMaxHeight, LatestEvalMinHeight, LatestEvalMaxMinHeight)
+        print(LatestEvalSpace, LatestEvalSpaceOfWidth, LatestEvalSpaceOfWidthUnderHalf, LatestEvalEraceCount, LatestEvalAverageHeight, LatestEvalMaxHeight, LatestEvalMinHeight, LatestEvalMaxMinHeight)
         pprint.pprint(LatestBackboardStatus, width = 61, compact = True)
         print(nextMove)
 
@@ -188,14 +192,14 @@ class Block_Controller(object):
                     first_block = 1
         return count
 
-    def GetNumOfSpaceWidth(self, board_status):
+    def GetNumOfSpaceWidthWithRange(self, board_status, start, end):
         # 
         # Get Space Num. 
         # Count Space Of Width.
         #
         
         count = 0
-        for y in range(22):
+        for y in range(start, end):
             width_block = 0
             count_of_y = 0
             for x in range(10):
@@ -207,6 +211,23 @@ class Block_Controller(object):
                 count = count + count_of_y
                 
         return count
+
+    def GetNumOfSpaceWidth(self, board_status):
+        # 
+        # Get Space Num. 
+        # Count Space Of Width.
+        #
+        
+        return self.GetNumOfSpaceWidthWithRange(board_status, 0, 22)
+        
+        
+    def GetNumOfSpaceWidthUnderHalf(self, board_status):
+        # 
+        # Get Space Num. 
+        # Count Space Of Width.
+        # 14 22 14426
+        
+        return self.GetNumOfSpaceWidthWithRange(board_status, 14, 22)
 
     def AddBlock(self, board_status, x, y, index):
     
