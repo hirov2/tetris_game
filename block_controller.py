@@ -10,14 +10,27 @@ class Block_Controller(object):
 
     # init parameter
     board_backboard = 0
-    board_data_width = 0
-    board_data_height = 0
+    board_data_width = 10
+    board_data_height = 22
     board_status = 0
     ShapeNone_index = 0
     CurrentShape_class = 0
     CurrentShape_index = 0
     CurrentDirection = 0
     NextShape_class = 0
+    
+    LatestEvalSpace = 100000
+    LatestEvalSpaceOfWidth = 10000
+    LatestEvalSpaceOfWidthUnderHalf = 10000
+    LatestEvalAverageHeight = 0
+    LatestEvalMaxHeight = 0
+    LatestEvalMinHeight = 100000
+    LatestEvalMaxMinHeight = 100000
+    LatestEvalEraceCount = 0
+    LatestBackboardStatus = 0
+    
+    LatestDirection = 0
+    LatestX = 0
 
     # GetNextMove is main function.
     # input
@@ -38,17 +51,14 @@ class Block_Controller(object):
 	
 	# current board info
         self.board_backboard = GameStatus["field_info"]["backboard"]
+        self.board_data_width = GameStatus["field_info"]["width"]
+        self.board_data_height = GameStatus["field_info"]["height"]
         # current Shape info
         CurrentShapeDirectionRange = GameStatus["block_info"]["currentShape"]["direction_range"]
         self.CurrentShape_index = GameStatus["block_info"]["currentShape"]["index"]
         self.CurrentDirection = GameStatus["block_info"]["currentDirection"]
-        
-        print("Direction = ", self.CurrentDirection)
 	
         # search best nextMove -->
-        # random sample (Initialize)
-        nextMove["strategy"]["direction"] = random.randint(0,3)
-        nextMove["strategy"]["x"] = random.randint(0,9)
         nextMove["strategy"]["y_operation"] = 1
         nextMove["strategy"]["y_moveblocknum"] = 0
         
@@ -56,15 +66,11 @@ class Block_Controller(object):
         pprint.pprint(self.board_status, width = 61, compact = True);
         
         # search with current block Shape
-        LatestEvalSpace = 100000
-        LatestEvalSpaceOfWidth = 10000
-        LatestEvalSpaceOfWidthUnderHalf = 10000
-        LatestEvalAverageHeight = 0
-        LatestEvalMaxHeight = 0
-        LatestEvalMinHeight = 100000
-        LatestEvalMaxMinHeight = 100000
-        LatestEvalEraceCount = 0
-        LatestBackboardStatus = copy.deepcopy(self.board_status)
+        # Initialize Latest Scores And NextMove
+        self.UpdateLatestEval(100000, 100000, 100000,
+                              0, 0, 0,
+                              100000, 100000, self.board_status)
+        self.UpdateLatestNextMove(0, 0)
         
         break_flag = 0
         
@@ -74,7 +80,7 @@ class Block_Controller(object):
                 break
         
             # search with x
-            for x0 in range(10):
+            for x0 in range(self.board_data_width):
                 BackboardStatus = self.GetSimulationOfBackboardStatus(self.board_status,
                                                                       self.CurrentShape_index,
                                                                       direction0,
@@ -90,63 +96,38 @@ class Block_Controller(object):
                 print(EvalSpace, EvalSpaceOfWidth, EvalSpaceOfWidthUnderHalf, EvalEraceCount, EvalAverageHeight, EvalMaxHeight, EvalMinHeight, EvalMaxMinHeight)
 
                 if( EvalEraceCount > 2 ):
-                    LatestEvalSpace = EvalSpace
-                    LatestEvalSpaceOfWidth = EvalSpaceOfWidth
-                    LatestEvalSpaceOfWidthUnderHalf = EvalSpaceOfWidthUnderHalf
-                    LatestEvalEraceCount = EvalEraceCount
-                    LatestEvalAverageHeight = EvalAverageHeight
-                    LatestEvalMaxHeight = EvalMaxHeight
-                    LatestEvalMinHeight = EvalMinHeight
-                    LatestEvalMaxMinHeight = EvalMaxMinHeight
-                    LatestBackboardStatus = copy.deepcopy(BackboardStatus)
-                    nextMove["strategy"]["direction"] = direction0
-                    nextMove["strategy"]["x"] = x0
+                    self.UpdateLatestEval(EvalSpace, EvalSpaceOfWidth, EvalSpaceOfWidthUnderHalf,
+                                          EvalEraceCount, EvalAverageHeight, EvalMaxHeight,
+                                          EvalMinHeight, EvalMaxMinHeight, BackboardStatus)
+                    self.UpdateLatestNextMove(direction0, x0)
                     
                     break_flag = 1
                     break
 
-                if( EvalSpace < LatestEvalSpace ):
-                    LatestEvalSpace = EvalSpace
-                    LatestEvalSpaceOfWidth = EvalSpaceOfWidth
-                    LatestEvalSpaceOfWidthUnderHalf = EvalSpaceOfWidthUnderHalf
-                    LatestEvalEraceCount = EvalEraceCount
-                    LatestEvalAverageHeight = EvalAverageHeight
-                    LatestEvalMaxHeight = EvalMaxHeight
-                    LatestEvalMinHeight = EvalMinHeight
-                    LatestEvalMaxMinHeight = EvalMaxMinHeight
-                    LatestBackboardStatus = copy.deepcopy(BackboardStatus)
-                    nextMove["strategy"]["direction"] = direction0
-                    nextMove["strategy"]["x"] = x0
-                elif( EvalSpace == LatestEvalSpace ):
-                    if( EvalMaxMinHeight < LatestEvalMaxMinHeight ):
-                        LatestEvalSpace = EvalSpace
-                        LatestEvalSpaceOfWidth = EvalSpaceOfWidth
-                        LatestEvalSpaceOfWidthUnderHalf = EvalSpaceOfWidthUnderHalf
-                        LatestEvalEraceCount = EvalEraceCount
-                        LatestEvalAverageHeight = EvalAverageHeight
-                        LatestEvalMaxHeight = EvalMaxHeight
-                        LatestEvalMinHeight = EvalMinHeight
-                        LatestEvalMaxMinHeight = EvalMaxMinHeight
-                        LatestBackboardStatus = copy.deepcopy(BackboardStatus)
-                        nextMove["strategy"]["direction"] = direction0
-                        nextMove["strategy"]["x"] = x0
-                    elif( EvalMaxMinHeight == LatestEvalMaxMinHeight and EvalSpaceOfWidthUnderHalf < LatestEvalSpaceOfWidthUnderHalf ):
-                         LatestEvalSpace = EvalSpace
-                         LatestEvalSpaceOfWidth = EvalSpaceOfWidth
-                         LatestEvalSpaceOfWidthUnderHalf = EvalSpaceOfWidthUnderHalf
-                         LatestEvalEraceCount = EvalEraceCount
-                         LatestEvalAverageHeight = EvalAverageHeight
-                         LatestEvalMaxHeight = EvalMaxHeight
-                         LatestEvalMinHeight = EvalMinHeight
-                         LatestEvalMaxMinHeight = EvalMaxMinHeight
-                         LatestBackboardStatus = copy.deepcopy(BackboardStatus)
-                         nextMove["strategy"]["direction"] = direction0
-                         nextMove["strategy"]["x"] = x0
+                if( EvalSpace < self.LatestEvalSpace ):
+                    self.UpdateLatestEval(EvalSpace, EvalSpaceOfWidth, EvalSpaceOfWidthUnderHalf,
+                                          EvalEraceCount, EvalAverageHeight, EvalMaxHeight,
+                                          EvalMinHeight, EvalMaxMinHeight, BackboardStatus)
+                    self.UpdateLatestNextMove(direction0, x0)
+                elif( EvalSpace == self.LatestEvalSpace ):
+                    if( EvalMaxMinHeight < self.LatestEvalMaxMinHeight ):
+                        self.UpdateLatestEval(EvalSpace, EvalSpaceOfWidth, EvalSpaceOfWidthUnderHalf,
+                                              EvalEraceCount, EvalAverageHeight, EvalMaxHeight,
+                                              EvalMinHeight, EvalMaxMinHeight, BackboardStatus)
+                        self.UpdateLatestNextMove(direction0, x0)
+                    elif( EvalMaxMinHeight == self.LatestEvalMaxMinHeight and EvalSpaceOfWidthUnderHalf < self.LatestEvalSpaceOfWidthUnderHalf ):
+                         self.UpdateLatestEval(EvalSpace, EvalSpaceOfWidth, EvalSpaceOfWidthUnderHalf,
+                                               EvalEraceCount, EvalAverageHeight, EvalMaxHeight,
+                                               EvalMinHeight, EvalMaxMinHeight, BackboardStatus)
+                         self.UpdateLatestNextMove(direction0, x0)
          
 
+        nextMove["strategy"]["direction"] = self.LatestDirection
+        nextMove["strategy"]["x"] = self.LatestX
+
         print(self.CurrentShape_index)        
-        print(LatestEvalSpace, LatestEvalSpaceOfWidth, LatestEvalSpaceOfWidthUnderHalf, LatestEvalEraceCount, LatestEvalAverageHeight, LatestEvalMaxHeight, LatestEvalMinHeight, LatestEvalMaxMinHeight)
-        pprint.pprint(LatestBackboardStatus, width = 61, compact = True)
+        print(self.LatestEvalSpace, self.LatestEvalSpaceOfWidth, self.LatestEvalSpaceOfWidthUnderHalf, self.LatestEvalEraceCount, self.LatestEvalAverageHeight, self.LatestEvalMaxHeight, self.LatestEvalMinHeight, self.LatestEvalMaxMinHeight)
+        pprint.pprint(self.LatestBackboardStatus, width = 61, compact = True)
         print(nextMove)
 
         
@@ -158,16 +139,39 @@ class Block_Controller(object):
         print(nextMove)
         return nextMove
 
+    def UpdateLatestEval(self, EvalSpace, EvalSpaceOfWidth, EvalSpaceOfWidthUnderHalf, 
+                               EvalEraceCount, EvalAverageHeight, EvalMaxHeight,
+                               EvalMinHeight, EvalMaxMinHeight, BackboardStatus):
+    
+        self.LatestEvalSpace = EvalSpace
+        self.LatestEvalSpaceOfWidth = EvalSpaceOfWidth
+        self.LatestEvalSpaceOfWidthUnderHalf = EvalSpaceOfWidthUnderHalf
+        self.LatestEvalEraceCount = EvalEraceCount
+        self.LatestEvalAverageHeight = EvalAverageHeight
+        self.LatestEvalMaxHeight = EvalMaxHeight
+        self.LatestEvalMinHeight = EvalMinHeight
+        self.LatestEvalMaxMinHeight = EvalMaxMinHeight
+        self.LatestBackboardStatus = copy.deepcopy(BackboardStatus)
+        
+        return 0
+        
+    def UpdateLatestNextMove(self, direction, x):
+    
+        self.LatestDirection = direction
+        self.LatestX = x
+    
+        return 0
+
     def GetBackboardStatus(self, board_backboard):
         #
         # get Backboard Status by 0/1.
         # in two-dimensional array
         #
 
-        BackboardStatus = self.convert_1d_to_2d(board_backboard, 10)
+        BackboardStatus = self.convert_1d_to_2d(board_backboard, self.board_data_width)
         
-        for y in range(22):
-            for x in range(10):
+        for y in range(self.board_data_height):
+            for x in range(self.board_data_width):
                 if BackboardStatus[y][x] > 0:
                     BackboardStatus[y][x] = 1;
         
@@ -183,9 +187,9 @@ class Block_Controller(object):
         #
         
         count = 0
-        for x in range(10):
+        for x in range(self.board_data_width):
             first_block = 0
-            for y in range(22):
+            for y in range(self.board_data_height):
                 if board_status[y][x] == 0 and first_block == 1:
                     count = count + 1
                 elif board_status[y][x] > 0 and first_block == 0:
@@ -202,7 +206,7 @@ class Block_Controller(object):
         for y in range(start, end):
             width_block = 0
             count_of_y = 0
-            for x in range(10):
+            for x in range(self.board_data_width):
                 if board_status[y][x] == 0:
                     count_of_y = count_of_y + 1
                 elif board_status[y][x] > 0 and width_block == 0:
@@ -218,7 +222,7 @@ class Block_Controller(object):
         # Count Space Of Width.
         #
         
-        return self.GetNumOfSpaceWidthWithRange(board_status, 0, 22)
+        return self.GetNumOfSpaceWidthWithRange(board_status, 0, self.board_data_height)
         
         
     def GetNumOfSpaceWidthUnderHalf(self, board_status):
@@ -227,7 +231,7 @@ class Block_Controller(object):
         # Count Space Of Width.
         # 14 22 14426
         
-        return self.GetNumOfSpaceWidthWithRange(board_status, 14, 22)
+        return self.GetNumOfSpaceWidthWithRange(board_status, self.board_data_height - 8, self.board_data_height)
 
     def AddBlock(self, board_status, x, y, index):
     
@@ -242,8 +246,8 @@ class Block_Controller(object):
 
     def GetYOfTopBlock(self, board_status, x):
         # 指定X座標の中で最も高いY座標を返す
-        return_y = 22
-        for y in range(22):
+        return_y = self.board_data_height
+        for y in range(self.board_data_height):
             if board_status[y][x] > 0:
                 return_y = y
                 break
@@ -251,14 +255,14 @@ class Block_Controller(object):
 
     def GetYOfAverageBlock(self, board_status):
         average = 0;
-        for x in range(10):
+        for x in range(self.board_data_width):
             average = average + self.GetYOfTopBlock(board_status, x)
                 
-        return average/10
+        return average/self.board_data_width
 
     def GetYOfMaxBlock(self, board_status):
-        max_y = 22
-        for x in range(10):
+        max_y = self.board_data_height
+        for x in range(self.board_data_width):
             if self.GetYOfTopBlock(board_status, x) < max_y:
                 max_y = self.GetYOfTopBlock(board_status, x)
 
@@ -266,7 +270,7 @@ class Block_Controller(object):
 
     def GetYOfMinBlock(self, board_status):
         min_y = 0
-        for x in range(10):
+        for x in range(self.board_data_width):
             if self.GetYOfTopBlock(board_status, x) > min_y:
                 min_y = self.GetYOfTopBlock(board_status, x)
 
@@ -344,7 +348,7 @@ class Block_Controller(object):
             Candidate_y[0] = self.GetYOfTopBlock(BackboardStatus, x)
             Candidate_y[1] = self.GetYOfTopBlock(BackboardStatus, x + 1)
             
-            y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[1], 22, 22)
+            y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[1], self.board_data_height, self.board_data_height)
             
             BackboardStatus = self.AddBlock(BackboardStatus, x, y-3, 2)
             BackboardStatus = self.AddBlock(BackboardStatus, x, y-2, 2)
@@ -361,7 +365,7 @@ class Block_Controller(object):
             Candidate_y[1] = self.GetYOfTopBlock(BackboardStatus, x)
             Candidate_y[2] = self.GetYOfTopBlock(BackboardStatus, x + 1)
             
-            y = self.GetMinYOfBlock(22, Candidate_y[1], Candidate_y[2], 22)
+            y = self.GetMinYOfBlock(self.board_data_height, Candidate_y[1], Candidate_y[2], self.board_data_height)
             
             if Candidate_y[0] < y + 1:
                 y = Candidate_y[0]
@@ -404,7 +408,7 @@ class Block_Controller(object):
             Candidate_y[1] = self.GetYOfTopBlock(BackboardStatus, x)
             Candidate_y[2] = self.GetYOfTopBlock(BackboardStatus, x + 1)
             
-            y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[1], Candidate_y[2], 22)
+            y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[1], Candidate_y[2], self.board_data_height)
             
             BackboardStatus = self.AddBlock(BackboardStatus, x - 1, y - 1, 2)
             BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 1, 2)
@@ -431,7 +435,7 @@ class Block_Controller(object):
             Candidate_y[0] = self.GetYOfTopBlock(BackboardStatus, x - 1)
             Candidate_y[1] = self.GetYOfTopBlock(BackboardStatus, x)
             
-            y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[1], 22, 22)
+            y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[1], self.board_data_height, self.board_data_height)
             
             BackboardStatus = self.AddBlock(BackboardStatus, x, y-3, 3)
             BackboardStatus = self.AddBlock(BackboardStatus, x, y-2, 3)
@@ -448,7 +452,7 @@ class Block_Controller(object):
             Candidate_y[1] = self.GetYOfTopBlock(BackboardStatus, x)
             Candidate_y[2] = self.GetYOfTopBlock(BackboardStatus, x + 1)
             
-            y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[1], Candidate_y[2], 22)
+            y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[1], Candidate_y[2], self.board_data_height)
 
             BackboardStatus = self.AddBlock(BackboardStatus, x - 1, y - 2, 3)
             BackboardStatus = self.AddBlock(BackboardStatus, x - 1, y - 1, 3)
@@ -484,7 +488,7 @@ class Block_Controller(object):
             Candidate_y[1] = self.GetYOfTopBlock(BackboardStatus, x)
             Candidate_y[2] = self.GetYOfTopBlock(BackboardStatus, x + 1)
 
-            y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[1], 22, 22)
+            y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[1], self.board_data_height, self.board_data_height)
             
             if Candidate_y[2] < y + 1:
                 y = Candidate_y[2]
@@ -541,7 +545,7 @@ class Block_Controller(object):
             Candidate_y[1] = self.GetYOfTopBlock(BackboardStatus, x)
             Candidate_y[2] = self.GetYOfTopBlock(BackboardStatus, x + 1)
 
-            y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[2], 22, 22)
+            y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[2], self.board_data_height, self.board_data_height)
             
             if Candidate_y[1] < y + 1:
                 y = Candidate_y[1]
@@ -585,7 +589,7 @@ class Block_Controller(object):
             Candidate_y[1] = self.GetYOfTopBlock(BackboardStatus, x)
             Candidate_y[2] = self.GetYOfTopBlock(BackboardStatus, x + 1)
 
-            y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[1], Candidate_y[2], 22)
+            y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[1], Candidate_y[2], self.board_data_height)
 
             BackboardStatus = self.AddBlock(BackboardStatus, x - 1, y - 1, 4)
             BackboardStatus = self.AddBlock(BackboardStatus, x    , y - 2, 4)
@@ -611,7 +615,7 @@ class Block_Controller(object):
         Candidate_y[0] = self.GetYOfTopBlock(BackboardStatus, x)
         Candidate_y[1] = self.GetYOfTopBlock(BackboardStatus, x + 1)
         
-        y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[1], 22, 22)
+        y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[1], self.board_data_height, self.board_data_height)
         
         BackboardStatus = self.AddBlock(BackboardStatus, x    , y - 2, 5)
         BackboardStatus = self.AddBlock(BackboardStatus, x + 1, y - 2, 5)
@@ -642,7 +646,7 @@ class Block_Controller(object):
             Candidate_y[1] = self.GetYOfTopBlock(BackboardStatus, x)
             Candidate_y[2] = self.GetYOfTopBlock(BackboardStatus, x + 1)
 
-            y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[1], 22, 22)
+            y = self.GetMinYOfBlock(Candidate_y[0], Candidate_y[1], self.board_data_height, self.board_data_height)
             if Candidate_y[2] < y - 1:
                 y = Candidate_y[2]
                 BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 1, 6)
@@ -699,7 +703,7 @@ class Block_Controller(object):
             Candidate_y[1] = self.GetYOfTopBlock(BackboardStatus, x)
             Candidate_y[2] = self.GetYOfTopBlock(BackboardStatus, x + 1)
 
-            y = self.GetMinYOfBlock(22, Candidate_y[1], Candidate_y[2], 22)
+            y = self.GetMinYOfBlock(self.board_data_height, Candidate_y[1], Candidate_y[2], self.board_data_height)
             if Candidate_y[0] < y - 1:
                 y = Candidate_y[0]
                 BackboardStatus = self.AddBlock(BackboardStatus, x,     y - 1, 7)
@@ -784,7 +788,7 @@ class Block_Controller(object):
         BackboardStatus = board_status
         EraceCount = 0
         
-        for y in range(22):
+        for y in range(self.board_data_height):
             if board_status[y][0] > 0 and board_status[y][1] > 0 and board_status[y][2] > 0 and \
                board_status[y][3] > 0 and board_status[y][4] > 0 and board_status[y][5] > 0 and \
                board_status[y][6] > 0 and board_status[y][7] > 0 and board_status[y][8] > 0 and \
