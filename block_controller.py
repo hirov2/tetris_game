@@ -74,6 +74,8 @@ class Block_Controller(object):
         
         break_flag = 0
         
+#        ShapeDirectionList = self.GetShapeDirectionSerchList()
+        
         for direction0 in CurrentShapeDirectionRange:
         
             if( break_flag > 0):
@@ -93,7 +95,9 @@ class Block_Controller(object):
                 EvalMaxHeight = self.GetYOfMaxBlock(BackboardStatus)
                 EvalMinHeight = self.GetYOfMinBlock(BackboardStatus)
                 EvalMaxMinHeight = EvalMinHeight - EvalMaxHeight
-                print(EvalSpace, EvalSpaceOfWidth, EvalSpaceOfWidthUnderHalf, EvalEraceCount, EvalAverageHeight, EvalMaxHeight, EvalMinHeight, EvalMaxMinHeight)
+                print(EvalSpace, EvalSpaceOfWidth, EvalSpaceOfWidthUnderHalf,
+                      EvalEraceCount, EvalAverageHeight, EvalMaxHeight,
+                      EvalMinHeight, EvalMaxMinHeight)
 
                 if( EvalEraceCount > 2 ):
                     self.UpdateLatestEval(EvalSpace, EvalSpaceOfWidth, EvalSpaceOfWidthUnderHalf,
@@ -115,7 +119,8 @@ class Block_Controller(object):
                                               EvalEraceCount, EvalAverageHeight, EvalMaxHeight,
                                               EvalMinHeight, EvalMaxMinHeight, BackboardStatus)
                         self.UpdateLatestNextMove(direction0, x0)
-                    elif( EvalMaxMinHeight == self.LatestEvalMaxMinHeight and EvalSpaceOfWidthUnderHalf < self.LatestEvalSpaceOfWidthUnderHalf ):
+                    elif( EvalMaxMinHeight == self.LatestEvalMaxMinHeight\
+                      and EvalSpaceOfWidthUnderHalf < self.LatestEvalSpaceOfWidthUnderHalf ):
                          self.UpdateLatestEval(EvalSpace, EvalSpaceOfWidth, EvalSpaceOfWidthUnderHalf,
                                                EvalEraceCount, EvalAverageHeight, EvalMaxHeight,
                                                EvalMinHeight, EvalMaxMinHeight, BackboardStatus)
@@ -126,7 +131,9 @@ class Block_Controller(object):
         nextMove["strategy"]["x"] = self.LatestX
 
         print(self.CurrentShape_index)        
-        print(self.LatestEvalSpace, self.LatestEvalSpaceOfWidth, self.LatestEvalSpaceOfWidthUnderHalf, self.LatestEvalEraceCount, self.LatestEvalAverageHeight, self.LatestEvalMaxHeight, self.LatestEvalMinHeight, self.LatestEvalMaxMinHeight)
+        print(self.LatestEvalSpace, self.LatestEvalSpaceOfWidth, self.LatestEvalSpaceOfWidthUnderHalf,
+              self.LatestEvalEraceCount, self.LatestEvalAverageHeight, self.LatestEvalMaxHeight,
+              self.LatestEvalMinHeight, self.LatestEvalMaxMinHeight)
         pprint.pprint(self.LatestBackboardStatus, width = 61, compact = True)
         print(nextMove)
 
@@ -139,19 +146,38 @@ class Block_Controller(object):
         print(nextMove)
         return nextMove
 
+    def GetShapeDirectionSerchList(self):
+        
+        if 1 == self.CurrentShape_index:
+            ReturnShapeDirectionRange = [0, 1]
+        elif 2 == self.CurrentShape_index:
+            ReturnShapeDirectionRange = [2, 0, 1, 3]
+        elif 3 == self.CurrentShape_index:
+            ReturnShapeDirectionRange = [2, 0, 1, 3]
+        elif 4 == self.CurrentShape_index:
+            ReturnShapeDirectionRange = [1, 0, 2, 3]
+        elif 5 == self.CurrentShape_index:
+            ReturnShapeDirectionRange = [0]
+        elif 6 == self.CurrentShape_index:
+            ReturnShapeDirectionRange = [0, 1]
+        elif 7 == self.CurrentShape_index:
+            ReturnShapeDirectionRange = [0, 1]
+
+        return ReturnShapeDirectionRange
+
     def UpdateLatestEval(self, EvalSpace, EvalSpaceOfWidth, EvalSpaceOfWidthUnderHalf, 
                                EvalEraceCount, EvalAverageHeight, EvalMaxHeight,
                                EvalMinHeight, EvalMaxMinHeight, BackboardStatus):
     
-        self.LatestEvalSpace = EvalSpace
-        self.LatestEvalSpaceOfWidth = EvalSpaceOfWidth
+        self.LatestEvalSpace                 = EvalSpace
+        self.LatestEvalSpaceOfWidth          = EvalSpaceOfWidth
         self.LatestEvalSpaceOfWidthUnderHalf = EvalSpaceOfWidthUnderHalf
-        self.LatestEvalEraceCount = EvalEraceCount
-        self.LatestEvalAverageHeight = EvalAverageHeight
-        self.LatestEvalMaxHeight = EvalMaxHeight
-        self.LatestEvalMinHeight = EvalMinHeight
-        self.LatestEvalMaxMinHeight = EvalMaxMinHeight
-        self.LatestBackboardStatus = copy.deepcopy(BackboardStatus)
+        self.LatestEvalEraceCount            = EvalEraceCount
+        self.LatestEvalAverageHeight         = EvalAverageHeight
+        self.LatestEvalMaxHeight             = EvalMaxHeight
+        self.LatestEvalMinHeight             = EvalMinHeight
+        self.LatestEvalMaxMinHeight          = EvalMaxMinHeight
+        self.LatestBackboardStatus           = copy.deepcopy(BackboardStatus)
         
         return 0
         
@@ -245,7 +271,6 @@ class Block_Controller(object):
         return BackboardStatus
 
     def GetYOfTopBlock(self, board_status, x):
-        # 指定X座標の中で最も高いY座標を返す
         return_y = self.board_data_height
         for y in range(self.board_data_height):
             if board_status[y][x] > 0:
@@ -776,8 +801,7 @@ class Block_Controller(object):
             BackboardStatus = self.GetSimulationOfBackboardStatusWithShapeZ(BackboardStatus,
                                                                             Shape_direction, 
                                                                             Shape_x)
-#        print(Shape_index, Shape_x, Shape_direction)
-#        pprint.pprint(BackboardStatus, width = 61, compact = True)
+
         return BackboardStatus
 
 
