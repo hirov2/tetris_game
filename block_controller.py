@@ -9,6 +9,8 @@ import copy
 class Block_Controller(object):
 
     # init parameter
+    Mode = 3
+    
     board_backboard = 0
     board_data_width = 10
     board_data_height = 22
@@ -18,6 +20,8 @@ class Block_Controller(object):
     CurrentShape_index = 0
     CurrentDirection = 0
     NextShape_class = 0
+    
+    BlockIndexNo = 0
     
     LatestEvalSpace = 100000
     LatestEvalSpaceOfWidth = 10000
@@ -58,6 +62,8 @@ class Block_Controller(object):
         self.CurrentShape_index = GameStatus["block_info"]["currentShape"]["index"]
         self.CurrentDirection = GameStatus["block_info"]["currentDirection"]
 	
+        self.BlockIndexNo = GameStatus["judge_info"]["block_index"]
+        
         # search best nextMove -->
         nextMove["strategy"]["y_operation"] = 1
         nextMove["strategy"]["y_moveblocknum"] = 0
@@ -67,17 +73,38 @@ class Block_Controller(object):
         
         # search with current block Shape
         # Initialize Latest Scores And NextMove
+
+        if (self.Mode == 0):
+            nextMove = self.GetNextMoveByGameModeZero(nextMove, GameStatus)
+        elif (self.Mode == 1):
+            nextMove = self.GetNextMoveByGameModeOne(nextMove, GameStatus)
+        elif (self.Mode == 2):
+            if ( self.GetYOfMaxBlock(self.board_status) > self.board_data_height/2 ):
+                nextMove = self.GetNextMoveByGameModeZero(nextMove, GameStatus)
+            else:
+                nextMove = self.GetNextMoveByGameModeOne(nextMove, GameStatus)
+        elif (self.Mode == 3):
+            nextMove = self.GetNextMoveByGameModeThree(nextMove, GameStatus)
+
+        # return nextMove
+        print("===", datetime.now() - t1)
+        print(nextMove)
+        return nextMove
+
+    def GetNextMoveByGameModeZero(self, nextMove, GameStatus):
+    
+        CurrentShapeDirectionRange = GameStatus["block_info"]["currentShape"]["direction_range"]
+    
+        # search with current block Shape
+        # Initialize Latest Scores And NextMove
         self.UpdateLatestEval(100000, 100000, 100000,
                               0, 0, 0,
                               100000, 100000, self.board_status)
         self.UpdateLatestNextMove(0, 0)
         
         break_flag = 0
-        
-#        ShapeDirectionList = self.GetShapeDirectionSerchList()
-        
+
         for direction0 in CurrentShapeDirectionRange:
-        
             if( break_flag > 0):
                 break
         
@@ -135,16 +162,244 @@ class Block_Controller(object):
               self.LatestEvalEraceCount, self.LatestEvalAverageHeight, self.LatestEvalMaxHeight,
               self.LatestEvalMinHeight, self.LatestEvalMaxMinHeight)
         pprint.pprint(self.LatestBackboardStatus, width = 61, compact = True)
-        print(nextMove)
-
-        
-        
-        # search best nextMove <--
-
-        # return nextMove
-        print("===", datetime.now() - t1)
-        print(nextMove)
+    
         return nextMove
+
+    def GetNextMoveByGameModeOne(self, nextMove, GameStatus):
+
+        CurrentShapeDirectionRange = GameStatus["block_info"]["currentShape"]["direction_range"]
+    
+        # search with current block Shape
+        # Initialize Latest Scores And NextMove
+        self.UpdateLatestEval(100000, 100000, 100000,
+                              0, 0, 0,
+                              100000, 100000, self.board_status)
+        self.UpdateLatestNextMove(0, 0)
+        
+        break_flag = 0
+
+        for direction0 in CurrentShapeDirectionRange:
+            if( break_flag > 0):
+                break
+        
+            # search with x
+            for x0 in range(self.board_data_width):
+                BackboardStatus = self.GetSimulationOfBackboardStatus(self.board_status,
+                                                                      self.CurrentShape_index,
+                                                                      direction0,
+                                                                      x0)
+                EvalSpace = self.GetNumOfSpace(BackboardStatus)
+                EvalSpaceOfWidth = self.GetNumOfSpaceWidth(BackboardStatus)
+                EvalSpaceOfWidthUnderHalf = self.GetNumOfSpaceWidthUnderHalf(BackboardStatus)
+                EvalEraceCount = self.GetEraceCountInBackboard(BackboardStatus)
+                EvalAverageHeight = self.GetYOfAverageBlock(BackboardStatus)
+                EvalMaxHeight = self.GetYOfMaxBlock(BackboardStatus)
+                EvalMinHeight = self.GetYOfMinBlock(BackboardStatus)
+                EvalMaxMinHeight = EvalMinHeight - EvalMaxHeight
+                print(EvalSpace, EvalSpaceOfWidth, EvalSpaceOfWidthUnderHalf,
+                      EvalEraceCount, EvalAverageHeight, EvalMaxHeight,
+                      EvalMinHeight, EvalMaxMinHeight)
+
+                if( EvalEraceCount > 0 ):
+                    self.UpdateLatestEval(EvalSpace, EvalSpaceOfWidth, EvalSpaceOfWidthUnderHalf,
+                                          EvalEraceCount, EvalAverageHeight, EvalMaxHeight,
+                                          EvalMinHeight, EvalMaxMinHeight, BackboardStatus)
+                    self.UpdateLatestNextMove(direction0, x0)
+                    
+                    break_flag = 1
+                    break
+
+                if( EvalMaxHeight > self.LatestEvalMaxHeight ):
+                    self.UpdateLatestEval(EvalSpace, EvalSpaceOfWidth, EvalSpaceOfWidthUnderHalf,
+                                          EvalEraceCount, EvalAverageHeight, EvalMaxHeight,
+                                          EvalMinHeight, EvalMaxMinHeight, BackboardStatus)
+                    self.UpdateLatestNextMove(direction0, x0)
+                elif( EvalMaxHeight == self.LatestEvalMaxHeight ):
+                    if ( EvalSpace < self.LatestEvalSpace ):
+                        self.UpdateLatestEval(EvalSpace, EvalSpaceOfWidth, EvalSpaceOfWidthUnderHalf,
+                                              EvalEraceCount, EvalAverageHeight, EvalMaxHeight,
+                                              EvalMinHeight, EvalMaxMinHeight, BackboardStatus)
+                        self.UpdateLatestNextMove(direction0, x0)
+                    elif( EvalSpace == self.LatestEvalSpace and EvalMaxMinHeight < self.LatestEvalMaxMinHeight ):
+                        self.UpdateLatestEval(EvalSpace, EvalSpaceOfWidth, EvalSpaceOfWidthUnderHalf,
+                                              EvalEraceCount, EvalAverageHeight, EvalMaxHeight,
+                                              EvalMinHeight, EvalMaxMinHeight, BackboardStatus)
+                        self.UpdateLatestNextMove(direction0, x0)
+                    elif( EvalSpace == self.LatestEvalSpace and EvalMaxMinHeight == self.LatestEvalMaxMinHeight\
+                      and EvalSpaceOfWidthUnderHalf < self.LatestEvalSpaceOfWidthUnderHalf ):
+                         self.UpdateLatestEval(EvalSpace, EvalSpaceOfWidth, EvalSpaceOfWidthUnderHalf,
+                                               EvalEraceCount, EvalAverageHeight, EvalMaxHeight,
+                                               EvalMinHeight, EvalMaxMinHeight, BackboardStatus)
+                         self.UpdateLatestNextMove(direction0, x0)
+         
+
+        nextMove["strategy"]["direction"] = self.LatestDirection
+        nextMove["strategy"]["x"] = self.LatestX
+
+        print(self.CurrentShape_index)        
+        print(self.LatestEvalSpace, self.LatestEvalSpaceOfWidth, self.LatestEvalSpaceOfWidthUnderHalf,
+              self.LatestEvalEraceCount, self.LatestEvalAverageHeight, self.LatestEvalMaxHeight,
+              self.LatestEvalMinHeight, self.LatestEvalMaxMinHeight)
+        pprint.pprint(self.LatestBackboardStatus, width = 61, compact = True)
+    
+        return nextMove
+
+    def GetNextMoveByGameModeThree(self, nextMove, GameStatus):
+        MoveList = [[1,   1, 1, 2], #
+                    [2,   2, 3, 5], #
+                    [3,   3, 0, 8], #
+                    [4,   4, 3, 4], #
+                    [5,   5, 0, 0], #
+                    [6,   6, 1, 6], #
+                    [7,   7, 1, 2], #
+                    [8,   1, 0, 0], #
+                    [9,   2, 0, 1], #
+                    [10,  3, 0, 8], #
+                    [11,  4, 2, 5], #
+                    [12,  5, 0, 6], #
+                    [13,  6, 0, 4], #
+                    [14,  7, 1, 2], #
+                    [15,  1, 0, 9], #
+                    [16,  2, 3, 7], #
+                    [17,  3, 0, 2], #
+                    [18,  4, 0, 7], #
+                    [19,  5, 0, 0], #
+                    [20,  6, 1, 7], #
+                    [21,  7, 0, 4], #
+                    [22,  1, 0, 6], # 
+                    [23,  2, 0, 0], #
+                    [24,  3, 3, 4], #
+                    [25,  4, 3, 3], #
+                    [26,  5, 0, 1], #
+                    [27,  6, 1, 4], #
+                    [28,  7, 0, 5], #
+                    [29,  1, 0, 9], #
+                    [30,  2, 0, 4], #
+                    [31,  3, 3, 2], #
+                    [32,  4, 0, 0], #
+                    [33,  5, 0, 2], #
+                    [34,  6, 1, 0], #
+                    [35,  7, 0, 2], #
+                    [36,  1, 0, 0], #
+                    [37,  2, 0, 1], #
+                    [38,  3, 3, 7], #
+                    [39,  4, 2, 6], #
+                    [40,  5, 0, 7], #
+                    [41,  6, 1, 0], #
+                    [42,  7, 0, 7], #
+                    [43,  1, 0, 9], #
+                    [44,  2, 2, 3], #
+                    [45,  3, 3, 7], #
+                    [46,  4, 2, 5], #
+                    [47,  5, 0, 2], #
+                    [48,  6, 1, 0], #
+                    [49,  7, 1, 4], #
+                    [50,  1, 0, 9], #
+                    [51,  2, 2, 4], #
+                    [52,  3, 1, 7], #
+                    [53,  4, 0, 2], #
+                    [54,  5, 0, 7], #
+                    [55,  6, 0, 6], #
+                    [56,  7, 0, 1], #
+                    [57,  1, 0, 9], #
+                    [58,  2, 2, 3], #
+                    [59,  3, 3, 7], #
+                    [60,  4, 3, 2], #
+                    [61,  5, 0, 7], #
+                    [62,  6, 1, 4], #
+                    [63,  7, 0, 5], #
+                    [64,  1, 0, 9], #
+                    [65,  2, 1, 7], #
+                    [66,  3, 1, 7], #
+                    [67,  4, 0, 0], #
+                    [68,  5, 0, 4], #
+                    [69,  6, 1, 0], #
+                    [70,  7, 0, 7], #
+                    [71,  1, 0, 0], #
+                    [72,  2, 2, 2], #
+                    [73,  3, 3, 7], #
+                    [74,  4, 3, 4], #
+                    [75,  5, 0, 1], #
+                    [76,  6, 1, 4], #
+                    [77,  7, 0, 5], #
+                    [78,  1, 0, 3], #
+                    [79,  2, 2, 1], #
+                    [80,  3, 0, 8], #
+                    [81,  4, 3, 4], #
+                    [82,  5, 0, 6], #
+                    [83,  6, 0, 3], #
+                    [84,  7, 1, 2], #
+                    [85,  1, 0, 9], #
+                    [86,  2, 0, 0], #
+                    [87,  3, 0, 8], #
+                    [88,  4, 1, 2], #
+                    [89,  5, 0, 5], #
+                    [90,  6, 1, 6], #
+                    [91,  7, 0, 1], #
+                    [92,  1, 0, 9], #
+                    [93,  2, 0, 4], #
+                    [94,  3, 0, 8], #
+                    [95,  4, 0, 5], #
+                    [96,  5, 0, 0], #
+                    [97,  6, 1, 2], #
+                    [98,  7, 1, 4], #
+                    [99,  1, 0, 9], #
+                    [100, 2, 0, 3], #
+                    [101, 3, 3, 1], #
+                    [102, 4, 3, 2], #
+                    [103, 5, 0, 4], #
+                    [104, 6, 1, 6], #
+                    [105, 7, 0, 7], #
+                    [106, 1, 0, 9], #
+                    [107, 2, 0, 4], #
+                    [108, 3, 3, 7], #
+                    [109, 4, 0, 0], #
+                    [110, 5, 0, 6], #
+                    [111, 6, 1, 2], #
+                    [112, 7, 0, 3], #
+                    [113, 1, 0, 8], #
+                    [114, 2, 3, 6], #
+                    [115, 3, 0, 8], #
+                    [116, 4, 2, 1], #
+                    [117, 5, 0, 5], #
+                    [118, 6, 1, 3], #
+                    [119, 7, 1, 0], #
+                    [120, 1, 0, 9], #
+                    [121, 2, 2, 2], # 
+                    [122, 3, 2, 0], #
+                    [123, 4, 3, 6], #
+                    [124, 5, 0, 0], #
+                    [125, 6, 1, 4], #
+                    [126, 7, 1, 7], #
+                    [127, 1, 0, 2], #
+                    [128, 2, 0, 0], #
+                    [129, 3, 0, 2], #
+                    [130, 4, 0, 6], #
+                   ]
+
+        nextMove["strategy"]["direction"] = 0
+        nextMove["strategy"]["x"] = 0
+
+        if (self.BlockIndexNo > len(MoveList)):
+            self.GetNextMoveByGameModeOne(nextMove, GameStatus)
+        elif (self.BlockIndexNo == MoveList[self.BlockIndexNo-1][0]):
+            print( MoveList[self.BlockIndexNo-1] )
+            
+            # Check Shape Type
+            if ( MoveList[self.BlockIndexNo-1][1] != self.CurrentShape_index):
+                print("GetNextMoveByGameModeThree ERR", self.BlockIndexNo, self.CurrentShape_index, MoveList[self.BlockIndexNo-1][1])
+            
+            # Set nextMove Scenario
+            nextMove["strategy"]["direction"] = MoveList[self.BlockIndexNo-1][2]
+            nextMove["strategy"]["x"]         = MoveList[self.BlockIndexNo-1][3]
+            
+
+        print(self.BlockIndexNo)
+
+#        pprint.pprint(self.LatestBackboardStatus, width = 61, compact = True)
+    
+        return nextMove    
+
 
     def GetShapeDirectionSerchList(self):
         
