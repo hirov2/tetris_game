@@ -79,10 +79,7 @@ class Block_Controller(object):
         elif (self.Mode == 1):
             nextMove = self.GetNextMoveByGameModeOne(nextMove, GameStatus)
         elif (self.Mode == 2):
-            if ( self.GetYOfMaxBlock(self.board_status) > self.board_data_height/2 ):
-                nextMove = self.GetNextMoveByGameModeZero(nextMove, GameStatus)
-            else:
-                nextMove = self.GetNextMoveByGameModeOne(nextMove, GameStatus)
+            nextMove = self.GetNextMoveByGameModeTwo(nextMove, GameStatus)
         elif (self.Mode == 3):
             nextMove = self.GetNextMoveByGameModeThree(nextMove, GameStatus)
 
@@ -244,6 +241,13 @@ class Block_Controller(object):
     
         return nextMove
 
+    def GetNextMoveByGameModeTwo(self, nextMove, GameStatus):
+            if ( self.GetYOfMaxBlock(self.board_status) > self.board_data_height/2 ):
+                nextMove = self.GetNextMoveByGameModeZero(nextMove, GameStatus)
+            else:
+                nextMove = self.GetNextMoveByGameModeOne(nextMove, GameStatus)
+            return nextMove
+
     def GetNextMoveByGameModeThree(self, nextMove, GameStatus):
         MoveList = [[1,   1, 1, 2], [2,   2, 3, 5], [3,   3, 0, 8], [4,   4, 3, 4], [5,   5, 0, 0], 
                     [6,   6, 1, 6], [7,   7, 1, 2], [8,   1, 0, 0], [9,   2, 0, 1], [10,  3, 0, 8],
@@ -282,24 +286,14 @@ class Block_Controller(object):
                     [171, 3, 3, 5], [172, 4, 2, 8], [173, 5, 0, 3], [174, 6, 0, 7], [175, 7, 1, 5],
                     [176, 1, 0, 9], [177, 2, 2, 9], [178, 3, 0, 5], [179, 4, 0, 2], [180, 5, 0, 0]]
 
-        nextMove["strategy"]["direction"] = 0
-        nextMove["strategy"]["x"] = 0
-
-        if (self.BlockIndexNo > len(MoveList)):
-            self.GetNextMoveByGameModeOne(nextMove, GameStatus)
-        elif (self.BlockIndexNo == MoveList[self.BlockIndexNo-1][0]):
-            print( MoveList[self.BlockIndexNo-1] )
-            
-            # Check Shape Type
-            if ( MoveList[self.BlockIndexNo-1][1] != self.CurrentShape_index):
-                print("GetNextMoveByGameModeThree ERR", self.BlockIndexNo, self.CurrentShape_index, MoveList[self.BlockIndexNo-1][1])
-            
+        if (self.BlockIndexNo <= len(MoveList) and self.BlockIndexNo == MoveList[self.BlockIndexNo-1][0]\
+                                               and self.CurrentShape_index == MoveList[self.BlockIndexNo-1][1]):            
             # Set nextMove Scenario
             nextMove["strategy"]["direction"] = MoveList[self.BlockIndexNo-1][2]
             nextMove["strategy"]["x"]         = MoveList[self.BlockIndexNo-1][3]
-            
+        else:
+            nextMove = self.GetNextMoveByGameModeTwo(nextMove, GameStatus)
 
-        print(self.BlockIndexNo)
         return nextMove    
 
 
