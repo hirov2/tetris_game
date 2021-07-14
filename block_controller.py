@@ -82,6 +82,8 @@ class Block_Controller(object):
             nextMove = self.GetNextMoveByGameModeTwo(nextMove, GameStatus)
         elif (self.Mode == 3):
             nextMove = self.GetNextMoveByGameModeThree(nextMove, GameStatus)
+        elif (self.Mode == 4):
+            nextMove = self.GetNextMoveByGameModeFour(nextMove, GameStatus)
 
         # return nextMove
         print("===", datetime.now() - t1)
@@ -293,9 +295,13 @@ class Block_Controller(object):
             nextMove["strategy"]["x"]         = MoveList[self.BlockIndexNo-1][3]
         else:
             nextMove = self.GetNextMoveByGameModeTwo(nextMove, GameStatus)
+            self.Mode = 2
 
-        return nextMove    
-
+        return nextMove
+            
+    def GetNextMoveByGameModeFour(self, nextMove, GameStatus):
+    
+        return nextMove
 
     def GetShapeDirectionSerchList(self):
         
