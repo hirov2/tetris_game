@@ -9,7 +9,7 @@ import copy
 class Block_Controller(object):
 
     # init parameter
-    Mode = 3
+    Mode = 2
     
     board_backboard = 0
     board_data_width = 10
