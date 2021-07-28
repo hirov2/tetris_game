@@ -4,6 +4,7 @@
 import numpy as np_randomShape
 import numpy as np_randomObstacle
 import numpy as np_randomObstaclePiece
+import copy
 
 # Shape manager
 class Shape(object):
@@ -130,6 +131,17 @@ class BoardData(object):
     def getData(self):
         return self.backBoard[:]
 
+    def getDataWithCurrentBlock(self):
+        tmp_backboard = copy.deepcopy(self.backBoard)
+        Shape_class = self.currentShape
+        direction = self.currentDirection
+        x = self.currentX
+        y = self.currentY
+        coordArray = Shape_class.getCoords(direction, x, y)
+        for _x, _y in coordArray:
+            tmp_backboard[_y * self.width + _x] = Shape_class.shape
+        return tmp_backboard[:]
+
     def getValue(self, x, y):
         return self.backBoard[x + y * BoardData.width]
 
@@ -145,7 +157,7 @@ class BoardData(object):
                 self.nextShapeIndexCnt = 1
         else:
             # random value
-            nextShapeIndex = np_randomShape.random.randint(1, 7)
+            nextShapeIndex = np_randomShape.random.randint(1, 8)
         return nextShapeIndex
 
     def createNewPiece(self):
@@ -291,7 +303,7 @@ class BoardData(object):
                 # create obstacle
                 tmp_num = np_randomObstacle.random.randint(1, 100)
                 if tmp_num <= obstacle_probability:
-                    self.backBoard[x + y * BoardData.width] = np_randomObstaclePiece.random.randint(1, 7)
+                    self.backBoard[x + y * BoardData.width] = np_randomObstaclePiece.random.randint(1, 8)
                     line_obstacle_cnt += 1
 
 BOARD_DATA = BoardData()
